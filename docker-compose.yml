@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: email_assistant_postgres
+    environment:
+      POSTGRES_DB: email_assistant
+      POSTGRES_USER: email_assistant
+      POSTGRES_PASSWORD: email_assistant
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  chroma:
+    image: chromadb/chroma:0.5.5
+    container_name: email_assistant_chroma
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+
+  backend:
+    build:
+      context: ./backend
+    container_name: email_assistant_backend
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8002:8000"
+    depends_on:
+      - postgres
+      - chroma
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: email_assistant_frontend
+    env_file:
+      - ./frontend/.env.local
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  chroma_data:

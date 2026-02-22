@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend deps
+        run: pip install -r requirements.txt
+
+      - name: Compile backend
+        run: python -m compileall src
+
+      - name: Run backend tests (unit + integration)
+        env:
+          DATABASE_URL: postgresql+psycopg://email_assistant:email_assistant@localhost:5432/email_assistant
+        run: pytest -q
+
+      - name: Eval smoke (core + adversarial + voice)
+        run: |
+          python - <<'PY'
+          from src.evaluation.harness import EvaluationHarness
+          h = EvaluationHarness()
+          for ds in ("core", "adversarial", "voice"):
+              result = h.run_eval(ds, user_id="ci-eval", max_cases=1)
+              assert result["summary"]["total_cases"] == 1
+          print("eval smoke passed")
+          PY
+
+      - name: Release gate eval thresholds
+        run: python scripts/eval_gate.py
+
+      - name: Install security scan tools
+        run: pip install bandit pip-audit
+
+      - name: Security static scan (bandit)
+        run: bandit -q -r src
+
+      - name: Dependency vulnerability scan (pip-audit)
+        run: pip-audit
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install frontend deps
+        run: npm install
+
+      - name: Type check/build
+        run: npm run build
+
+      - name: Dependency vulnerability scan (npm audit)
+        run: npm audit --audit-level=high
+
+  smoke:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start services
+        run: docker compose up --build -d postgres chroma backend frontend
+
+      - name: Apply migrations
+        run: docker compose run --rm backend alembic upgrade head
+
+      - name: Wait for backend
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8002/api/v1/health >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become ready in time" >&2
+          exit 1
+
+      - name: Smoke test auth + draft + mcp
+        run: |
+          set -euo pipefail
+          TOKEN=$(curl -sS -X POST http://localhost:8002/api/v1/auth/token \
+            -H 'Content-Type: application/json' \
+            -d '{"user_id":"ci-user","role":"user","bootstrap_secret":"dev-bootstrap-secret"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])')
+          curl -fsS -X POST http://localhost:8002/api/v1/draft/generate \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H 'Content-Type: application/json' \
+            -d '{"user_id":"ci-user","prompt":"Draft a CI smoke email.","intent":"informational","tone":"professional","constraints":{"max_paragraphs":2,"must_include":[],"forbidden":["PII"]},"metadata":{"recipient_role":"internal","language":"en"}}' >/dev/null
+          curl -fsS -X GET http://localhost:8002/api/v1/mcp/tools \
+            -H "Authorization: Bearer ${TOKEN}" >/dev/null
+
+      - name: Show compose logs on failure
+        if: failure()
+        run: docker compose logs --tail=200
+
+      - name: Teardown
+        if: always()
+        run: docker compose down -v
