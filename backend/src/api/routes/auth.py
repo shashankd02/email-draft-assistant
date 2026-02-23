@@ -25,6 +25,11 @@ class AuthTokenResponse(BaseModel):
 
 @router.post("/token", response_model=AuthTokenResponse)
 def issue_token(payload: AuthTokenRequest) -> AuthTokenResponse:
+    if settings.app_env.lower() != "development":
+        raise HTTPException(
+            status_code=403,
+            detail={"error_code": "ACCESS_DENIED", "message": "Bootstrap token endpoint is disabled outside development"},
+        )
     if payload.bootstrap_secret != settings.auth_bootstrap_secret:
         raise HTTPException(status_code=403, detail={"error_code": "ACCESS_DENIED", "message": "Invalid bootstrap secret"})
 
@@ -62,7 +67,13 @@ def register(payload: RegisterRequest) -> AuthTokenResponse:
         raise HTTPException(status_code=400, detail={"error_code": "INVALID_INPUT", "message": "Username must be at least 3 characters"})
     if len(payload.password) < 8:
         raise HTTPException(status_code=400, detail={"error_code": "INVALID_INPUT", "message": "Password must be at least 8 characters"})
-    role = payload.role if payload.role in {"user", "admin"} else "user"
+    requested_role = (payload.role or "user").strip().lower()
+    if requested_role == "admin" and settings.app_env.lower() != "development":
+        raise HTTPException(
+            status_code=403,
+            detail={"error_code": "ACCESS_DENIED", "message": "Admin self-registration is disabled outside development"},
+        )
+    role = requested_role if requested_role in {"user", "admin"} else "user"
     email = (payload.email or "").strip() or (username if "@" in username else f"{username}@local.dev")
 
     with SessionLocal() as db:
