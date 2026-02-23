@@ -25,10 +25,6 @@ export default function ArchitecturePage() {
 
                 <path d="M 110 95 H 1090" className="e2e-backbone" />
 
-                <line x1="245" y1="95" x2="335" y2="95" className="e2e-link" markerEnd="url(#e2e-arrow)" />
-                <line x1="525" y1="95" x2="615" y2="95" className="e2e-link" markerEnd="url(#e2e-arrow)" />
-                <line x1="805" y1="95" x2="895" y2="95" className="e2e-link" markerEnd="url(#e2e-arrow)" />
-
                 <g className="e2e-node">
                   <rect x="40" y="58" width="205" height="74" rx="12" />
                   <text x="142" y="88" textAnchor="middle" className="e2e-title">01 User Interaction</text>
@@ -52,6 +48,10 @@ export default function ArchitecturePage() {
                   <text x="1005" y="88" textAnchor="middle" className="e2e-title">04 Tools + Providers + Data</text>
                   <text x="1005" y="108" textAnchor="middle" className="e2e-sub">MCP, OpenAI/Deepgram, Postgres/Chroma</text>
                 </g>
+
+                <line x1="245" y1="95" x2="335" y2="95" className="e2e-link" markerEnd="url(#e2e-arrow)" />
+                <line x1="525" y1="95" x2="615" y2="95" className="e2e-link" markerEnd="url(#e2e-arrow)" />
+                <line x1="805" y1="95" x2="895" y2="95" className="e2e-link" markerEnd="url(#e2e-arrow)" />
 
                 <line x1="142" y1="132" x2="142" y2="170" className="e2e-drop" />
                 <line x1="422" y1="132" x2="422" y2="170" className="e2e-drop" />

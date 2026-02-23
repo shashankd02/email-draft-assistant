@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1080" viewBox="0 0 1800 1080" role="img" aria-label="System architecture diagram">
+  <defs>
+    <style>
+      .bg{fill:#071325}
+      .title{font:700 36px 'Segoe UI',Arial,sans-serif;fill:#eaf3ff}
+      .sub{font:500 17px 'Segoe UI',Arial,sans-serif;fill:#a9bfdc}
+      .lane{fill:#0f1d35;stroke:#35527e;stroke-width:2;rx:18}
+      .lane-title{font:700 20px 'Segoe UI',Arial,sans-serif;fill:#f2f7ff}
+      .box{fill:#172b49;stroke:#5c88cd;stroke-width:2;rx:14}
+      .box-green{fill:#173b33;stroke:#5bcab2;stroke-width:2;rx:14}
+      .box-amber{fill:#3a2f1e;stroke:#d0a65d;stroke-width:2;rx:14}
+      .h{font:700 16px 'Segoe UI',Arial,sans-serif;fill:#f3f8ff}
+      .p{font:500 13px 'Segoe UI',Arial,sans-serif;fill:#c8daf5}
+      .edge{stroke:#79aaf3;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrA)}
+      .edge2{stroke:#72d3be;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrB)}
+    </style>
+    <marker id="arrA" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0,0 10,4 0,8" fill="#79aaf3"/></marker>
+    <marker id="arrB" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0,0 10,4 0,8" fill="#72d3be"/></marker>
+  </defs>
+
+  <rect class="bg" width="1800" height="1080"/>
+  <text x="60" y="70" class="title">AI-Powered Email Assistant - System Architecture</text>
+  <text x="60" y="102" class="sub">Readable overview of interface, API services, AI workflow, data stores, and provider integrations</text>
+
+  <rect x="46" y="140" width="1708" height="236" class="lane"/>
+  <text x="70" y="176" class="lane-title">Presentation Layer (Next.js)</text>
+
+  <rect x="80" y="198" width="390" height="154" class="box"/>
+  <text x="104" y="230" class="h">Authentication Experience</text>
+  <text x="104" y="254" class="p">Login and registration forms</text>
+  <text x="104" y="276" class="p">JWT session storage</text>
+  <text x="104" y="298" class="p">Role-based route visibility</text>
+
+  <rect x="500" y="198" width="390" height="154" class="box"/>
+  <text x="524" y="230" class="h">Compose Workspace</text>
+  <text x="524" y="254" class="p">Text and voice prompt capture</text>
+  <text x="524" y="276" class="p">Tone / intent / language controls</text>
+  <text x="524" y="298" class="p">Draft preview and playback actions</text>
+
+  <rect x="920" y="198" width="390" height="154" class="box"/>
+  <text x="944" y="230" class="h">Knowledge Views</text>
+  <text x="944" y="254" class="p">Architecture and workflow pages</text>
+  <text x="944" y="276" class="p">Quality and API documentation</text>
+  <text x="944" y="298" class="p">Public and logged-in visibility</text>
+
+  <rect x="1340" y="198" width="380" height="154" class="box"/>
+  <text x="1364" y="230" class="h">Admin Surfaces</text>
+  <text x="1364" y="254" class="p">Evaluation runs and datasets</text>
+  <text x="1364" y="276" class="p">Global observability and alerts</text>
+  <text x="1364" y="298" class="p">Maintenance controls</text>
+
+  <rect x="46" y="406" width="1708" height="282" class="lane"/>
+  <text x="70" y="442" class="lane-title">Application Layer (FastAPI)</text>
+
+  <rect x="80" y="468" width="304" height="196" class="box"/>
+  <text x="104" y="502" class="h">API Routers</text>
+  <text x="104" y="526" class="p">Auth, Draft, Voice</text>
+  <text x="104" y="548" class="p">MCP, Evaluation, Observability</text>
+  <text x="104" y="570" class="p">Maintenance, Health</text>
+
+  <rect x="418" y="468" width="430" height="196" class="box-green"/>
+  <text x="442" y="502" class="h">AI Workflow Orchestrator</text>
+  <text x="442" y="526" class="p">Input parse and intent validation</text>
+  <text x="442" y="548" class="p">Context enrich and prompt refine</text>
+  <text x="442" y="570" class="p">Personalize, tone, draft generation</text>
+  <text x="442" y="592" class="p">Review, routing, fallback, memory update</text>
+
+  <rect x="882" y="468" width="284" height="196" class="box"/>
+  <text x="906" y="502" class="h">Policy and Reliability</text>
+  <text x="906" y="526" class="p">Rate limit and replay checks</text>
+  <text x="906" y="548" class="p">Structured output validation</text>
+  <text x="906" y="570" class="p">Bounded retries and safe fallback</text>
+
+  <rect x="1198" y="468" width="260" height="196" class="box"/>
+  <text x="1222" y="502" class="h">MCP Runtime</text>
+  <text x="1222" y="526" class="p">Tool calls</text>
+  <text x="1222" y="548" class="p">Resource ACLs</text>
+  <text x="1222" y="570" class="p">Invocation traces</text>
+
+  <rect x="1490" y="468" width="230" height="196" class="box"/>
+  <text x="1514" y="502" class="h">Telemetry</text>
+  <text x="1514" y="526" class="p">Request correlation IDs</text>
+  <text x="1514" y="548" class="p">Metrics and alert counters</text>
+  <text x="1514" y="570" class="p">LangSmith status</text>
+
+  <rect x="46" y="718" width="1708" height="316" class="lane"/>
+  <text x="70" y="754" class="lane-title">Data and Integration Layer</text>
+
+  <rect x="80" y="780" width="320" height="228" class="box-amber"/>
+  <text x="104" y="814" class="h">PostgreSQL</text>
+  <text x="104" y="838" class="p">User accounts and roles</text>
+  <text x="104" y="860" class="p">Drafts, feedback, audit logs</text>
+  <text x="104" y="882" class="p">Evaluation history</text>
+
+  <rect x="430" y="780" width="320" height="228" class="box-amber"/>
+  <text x="454" y="814" class="h">Chroma Memory Store</text>
+  <text x="454" y="838" class="p">Profile and thread vectors</text>
+  <text x="454" y="860" class="p">Retrieval context for personalization</text>
+  <text x="454" y="882" class="p">Continuity across interactions</text>
+
+  <rect x="780" y="780" width="260" height="228" class="box-amber"/>
+  <text x="804" y="814" class="h">OpenAI</text>
+  <text x="804" y="838" class="p">Draft generation</text>
+  <text x="804" y="860" class="p">Text-to-speech</text>
+  <text x="804" y="882" class="p">Judge-assist scoring</text>
+
+  <rect x="1070" y="780" width="260" height="228" class="box-amber"/>
+  <text x="1094" y="814" class="h">Deepgram</text>
+  <text x="1094" y="838" class="p">Speech-to-text</text>
+  <text x="1094" y="860" class="p">Voice input transcription</text>
+
+  <rect x="1360" y="780" width="360" height="228" class="box-amber"/>
+  <text x="1384" y="814" class="h">Tavily and LangSmith</text>
+  <text x="1384" y="838" class="p">Search grounding and citations</text>
+  <text x="1384" y="860" class="p">Tracing and quality monitoring</text>
+  <text x="1384" y="882" class="p">Operational visibility</text>
+
+  <path class="edge" d="M275 352 C275 394,275 426,275 468"/>
+  <path class="edge" d="M695 352 C695 394,695 426,695 468"/>
+  <path class="edge" d="M1115 352 C1115 394,1115 426,1115 468"/>
+  <path class="edge" d="M1530 352 C1530 394,1530 426,1530 468"/>
+
+  <path class="edge2" d="M633 664 C633 712,633 744,633 780"/>
+  <path class="edge2" d="M1024 664 C1024 712,1024 744,1024 780"/>
+  <path class="edge2" d="M1328 664 C1328 712,1328 744,1328 780"/>
+  <path class="edge2" d="M1605 664 C1605 712,1605 744,1605 780"/>
+</svg>

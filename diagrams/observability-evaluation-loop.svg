@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="900" viewBox="0 0 1660 900" role="img" aria-label="Observability and evaluation loop diagram">
+  <defs>
+    <style>
+      .bg{fill:#071325}
+      .title{font:700 34px 'Segoe UI',Arial,sans-serif;fill:#eaf3ff}
+      .sub{font:500 16px 'Segoe UI',Arial,sans-serif;fill:#a9bfdc}
+      .lane{fill:#0f1d35;stroke:#35527e;stroke-width:2;rx:16}
+      .lane-title{font:700 19px 'Segoe UI',Arial,sans-serif;fill:#f2f7ff}
+      .node{fill:#172b49;stroke:#5d88cc;stroke-width:2;rx:14}
+      .node-green{fill:#173b33;stroke:#5bc9b2;stroke-width:2;rx:14}
+      .h{font:700 15px 'Segoe UI',Arial,sans-serif;fill:#f3f8ff}
+      .p{font:500 13px 'Segoe UI',Arial,sans-serif;fill:#c8daf5}
+      .edge{stroke:#7aaaf3;stroke-width:2.8;fill:none;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#a)}
+      .edge2{stroke:#73d2be;stroke-width:2.8;fill:none;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#b)}
+    </style>
+    <marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0,0 10,4 0,8" fill="#7aaaf3"/></marker>
+    <marker id="b" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0,0 10,4 0,8" fill="#73d2be"/></marker>
+  </defs>
+
+  <rect class="bg" width="1660" height="900"/>
+  <text x="56" y="66" class="title">Observability and Evaluation Feedback Loop</text>
+  <text x="56" y="94" class="sub">Operational signals and evaluation outcomes feeding directly into product quality improvements</text>
+
+  <rect x="46" y="132" width="1568" height="238" class="lane"/>
+  <text x="70" y="168" class="lane-title">Signal Collection</text>
+
+  <rect x="82" y="196" width="340" height="150" class="node"/>
+  <text x="106" y="232" class="h">Runtime Requests</text>
+  <text x="106" y="256" class="p">User traffic outcomes</text>
+  <text x="106" y="278" class="p">Latency and error signals</text>
+
+  <rect x="468" y="196" width="340" height="150" class="node"/>
+  <text x="492" y="232" class="h">Metrics and Traces</text>
+  <text x="492" y="256" class="p">Request IDs and spans</text>
+  <text x="492" y="278" class="p">Per-agent counters</text>
+
+  <rect x="854" y="196" width="340" height="150" class="node"/>
+  <text x="878" y="232" class="h">Alerts and Dashboards</text>
+  <text x="878" y="256" class="p">Threshold checks</text>
+  <text x="878" y="278" class="p">Admin visibility</text>
+
+  <rect x="1240" y="196" width="340" height="150" class="node"/>
+  <text x="1264" y="232" class="h">Evaluation Runs</text>
+  <text x="1264" y="256" class="p">Dataset scoring trends</text>
+  <text x="1264" y="278" class="p">Regression indicators</text>
+
+  <rect x="46" y="406" width="1568" height="210" class="lane"/>
+  <text x="70" y="442" class="lane-title">Analysis and Decision Layer</text>
+
+  <rect x="252" y="468" width="520" height="126" class="node-green"/>
+  <text x="276" y="504" class="h">Improvement Planning</text>
+  <text x="276" y="528" class="p">Prompt, policy, and fallback tuning decisions</text>
+
+  <rect x="888" y="468" width="520" height="126" class="node-green"/>
+  <text x="912" y="504" class="h">Release Validation Gate</text>
+  <text x="912" y="528" class="p">Pass/fail checks before rollout</text>
+
+  <rect x="46" y="652" width="1568" height="202" class="lane"/>
+  <text x="70" y="688" class="lane-title">Execution Loop Closure</text>
+
+  <rect x="500" y="712" width="660" height="118" class="node"/>
+  <text x="524" y="748" class="h">Applied Changes and Re-Measurement</text>
+  <text x="524" y="772" class="p">Deploy updates, observe new traffic behavior, and repeat loop</text>
+
+  <path class="edge" d="M422 270 C440 270,450 270,468 270"/>
+  <path class="edge" d="M808 270 C826 270,836 270,854 270"/>
+  <path class="edge" d="M1194 270 C1212 270,1222 270,1240 270"/>
+
+  <path class="edge2" d="M1410 346 C1410 402,1160 422,1080 468"/>
+  <path class="edge2" d="M640 594 C640 644,700 676,760 712"/>
+  <path class="edge2" d="M1148 594 C1148 644,1068 676,988 712"/>
+  <path class="edge2" d="M500 772 C420 772,300 742,240 676 C188 620,188 520,252 468"/>
+</svg>

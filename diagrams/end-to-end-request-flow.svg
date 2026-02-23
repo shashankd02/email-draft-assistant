@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="980" viewBox="0 0 1660 980" role="img" aria-label="End to end flow diagram">
+  <defs>
+    <style>
+      .bg{fill:#071325}
+      .title{font:700 34px 'Segoe UI',Arial,sans-serif;fill:#eaf3ff}
+      .sub{font:500 16px 'Segoe UI',Arial,sans-serif;fill:#a9bfdc}
+      .lane{fill:#0f1d35;stroke:#35527e;stroke-width:2;rx:16}
+      .lane-title{font:700 19px 'Segoe UI',Arial,sans-serif;fill:#f2f7ff}
+      .step{fill:#172b49;stroke:#5d88cc;stroke-width:2;rx:14}
+      .step-green{fill:#173b33;stroke:#5bc9b2;stroke-width:2;rx:14}
+      .h{font:700 15px 'Segoe UI',Arial,sans-serif;fill:#f3f8ff}
+      .p{font:500 13px 'Segoe UI',Arial,sans-serif;fill:#c8daf5}
+      .edge{stroke:#7aaaf3;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#a)}
+      .edge2{stroke:#73d2be;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#b)}
+    </style>
+    <marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0,0 10,4 0,8" fill="#7aaaf3"/></marker>
+    <marker id="b" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0,0 10,4 0,8" fill="#73d2be"/></marker>
+  </defs>
+
+  <rect class="bg" width="1660" height="980"/>
+  <text x="56" y="68" class="title">End-to-End Application Flow</text>
+  <text x="56" y="96" class="sub">From user action to draft output, monitoring, and continuous quality improvements</text>
+
+  <rect x="46" y="134" width="1568" height="206" class="lane"/>
+  <text x="70" y="170" class="lane-title">1) User Journey</text>
+
+  <rect x="82" y="194" width="280" height="130" class="step"/>
+  <text x="106" y="232" class="h">Login and Registration</text>
+  <text x="106" y="256" class="p">User authentication</text>
+  <text x="106" y="278" class="p">Session initialization</text>
+
+  <rect x="398" y="194" width="280" height="130" class="step"/>
+  <text x="422" y="232" class="h">Compose Request</text>
+  <text x="422" y="256" class="p">Text or voice prompt</text>
+  <text x="422" y="278" class="p">Tone and language selection</text>
+
+  <rect x="714" y="194" width="280" height="130" class="step"/>
+  <text x="738" y="232" class="h">Submit Draft Request</text>
+  <text x="738" y="256" class="p">Intent and metadata</text>
+  <text x="738" y="278" class="p">Cancelable processing</text>
+
+  <rect x="1030" y="194" width="548" height="130" class="step"/>
+  <text x="1054" y="232" class="h">Interactive Waiting State</text>
+  <text x="1054" y="256" class="p">Thinking overlay with clear progress and cancel option</text>
+
+  <rect x="46" y="372" width="1568" height="282" class="lane"/>
+  <text x="70" y="408" class="lane-title">2) Backend and AI Processing</text>
+
+  <rect x="82" y="434" width="290" height="196" class="step-green"/>
+  <text x="106" y="470" class="h">Security and Request Controls</text>
+  <text x="106" y="496" class="p">JWT validation and scope checks</text>
+  <text x="106" y="518" class="p">Rate limits and replay protection</text>
+
+  <rect x="406" y="434" width="430" height="196" class="step-green"/>
+  <text x="430" y="470" class="h">Agent Workflow Execution</text>
+  <text x="430" y="496" class="p">Parse -> intent -> context enrichment</text>
+  <text x="430" y="518" class="p">Refine -> personalize -> tone style</text>
+  <text x="430" y="540" class="p">Draft -> review -> route and memory</text>
+
+  <rect x="870" y="434" width="324" height="196" class="step-green"/>
+  <text x="894" y="470" class="h">MCP and Provider Calls</text>
+  <text x="894" y="496" class="p">Search, memory, and voice tools</text>
+  <text x="894" y="518" class="p">OpenAI, Deepgram, Tavily</text>
+
+  <rect x="1228" y="434" width="350" height="196" class="step-green"/>
+  <text x="1252" y="470" class="h">Persistence and Observability</text>
+  <text x="1252" y="496" class="p">PostgreSQL and Chroma updates</text>
+  <text x="1252" y="518" class="p">Metrics, traces, and alerts</text>
+
+  <rect x="46" y="686" width="1568" height="248" class="lane"/>
+  <text x="70" y="722" class="lane-title">3) Output and Improvement Loop</text>
+
+  <rect x="82" y="748" width="350" height="168" class="step"/>
+  <text x="106" y="784" class="h">Draft Delivered to UI</text>
+  <text x="106" y="810" class="p">Preview, copy, and playback controls</text>
+  <text x="106" y="832" class="p">Quality indicators</text>
+
+  <rect x="468" y="748" width="350" height="168" class="step"/>
+  <text x="492" y="784" class="h">User Feedback Loop</text>
+  <text x="492" y="810" class="p">Edit, regenerate, or approve draft</text>
+  <text x="492" y="832" class="p">Feedback stored for future tuning</text>
+
+  <rect x="854" y="748" width="350" height="168" class="step"/>
+  <text x="878" y="784" class="h">Evaluation Workspace</text>
+  <text x="878" y="810" class="p">Dataset-based scoring and trends</text>
+  <text x="878" y="832" class="p">Quality baseline tracking</text>
+
+  <rect x="1240" y="748" width="338" height="168" class="step"/>
+  <text x="1264" y="784" class="h">Admin Monitoring</text>
+  <text x="1264" y="810" class="p">Global metrics and alerts</text>
+  <text x="1264" y="832" class="p">Operational follow-up actions</text>
+
+  <path class="edge" d="M362 258 C376 258,386 258,398 258"/>
+  <path class="edge" d="M678 258 C692 258,702 258,714 258"/>
+  <path class="edge" d="M994 258 C1008 258,1018 258,1030 258"/>
+
+  <path class="edge2" d="M1304 324 C1304 350,1304 362,1304 434"/>
+  <path class="edge2" d="M372 532 C386 532,396 532,406 532"/>
+  <path class="edge2" d="M836 532 C850 532,860 532,870 532"/>
+  <path class="edge2" d="M1194 532 C1208 532,1218 532,1228 532"/>
+  <path class="edge2" d="M1404 630 C1404 654,1404 670,1404 748"/>
+
+  <path class="edge" d="M432 832 C446 832,456 832,468 832"/>
+  <path class="edge" d="M818 832 C832 832,842 832,854 832"/>
+  <path class="edge" d="M1204 832 C1218 832,1228 832,1240 832"/>
+</svg>

@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1960" height="980" viewBox="0 0 1960 980" role="img" aria-label="Agent workflow diagram">
+  <defs>
+    <style>
+      .bg{fill:#071325}
+      .title{font:700 34px 'Segoe UI',Arial,sans-serif;fill:#eaf3ff}
+      .sub{font:500 16px 'Segoe UI',Arial,sans-serif;fill:#a9bfdc}
+      .lane{fill:#0f1d35;stroke:#35527e;stroke-width:2;rx:16}
+      .lane-title{font:700 19px 'Segoe UI',Arial,sans-serif;fill:#f2f7ff}
+      .node{fill:#172b49;stroke:#5d88cc;stroke-width:2;rx:14}
+      .gate{fill:#173b33;stroke:#5bc9b2;stroke-width:2;rx:14}
+      .warn{fill:#3a2f1e;stroke:#d0a65d;stroke-width:2;rx:14}
+      .h{font:700 15px 'Segoe UI',Arial,sans-serif;fill:#f3f8ff}
+      .p{font:500 13px 'Segoe UI',Arial,sans-serif;fill:#c8daf5}
+      .edge{stroke:#7aaaf3;stroke-width:2.8;fill:none;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#a)}
+      .edge2{stroke:#73d2be;stroke-width:2.8;fill:none;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#b)}
+      .edge3{stroke:#d0a65d;stroke-width:2.8;fill:none;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#c)}
+    </style>
+    <marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0,0 10,4 0,8" fill="#7aaaf3"/></marker>
+    <marker id="b" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0,0 10,4 0,8" fill="#73d2be"/></marker>
+    <marker id="c" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0,0 10,4 0,8" fill="#d0a65d"/></marker>
+  </defs>
+
+  <rect class="bg" width="1960" height="980"/>
+  <text x="56" y="66" class="title">Draft Generation Agent Workflow</text>
+  <text x="56" y="94" class="sub">Clear stage flow with dedicated quality gates and controlled fallback routing</text>
+
+  <rect x="46" y="132" width="1868" height="224" class="lane"/>
+  <text x="70" y="168" class="lane-title">Stage Group A - Intake and Context Preparation</text>
+
+  <rect x="82" y="192" width="230" height="140" class="node"/>
+  <text x="106" y="228" class="h">1. Input Parser</text>
+  <text x="106" y="252" class="p">Normalize request fields</text>
+  <text x="106" y="274" class="p">Basic payload validation</text>
+
+  <rect x="356" y="192" width="230" height="140" class="gate"/>
+  <text x="380" y="228" class="h">2. Intent Guard</text>
+  <text x="380" y="252" class="p">Email-intent enforcement</text>
+  <text x="380" y="274" class="p">Reject non-email prompts</text>
+
+  <rect x="630" y="192" width="250" height="140" class="node"/>
+  <text x="654" y="228" class="h">3. Context Enrichment</text>
+  <text x="654" y="252" class="p">Optional MCP web context</text>
+  <text x="654" y="274" class="p">Citation-ready grounding</text>
+
+  <rect x="924" y="192" width="250" height="140" class="node"/>
+  <text x="948" y="228" class="h">4. Prompt Refiner</text>
+  <text x="948" y="252" class="p">Improve clarity and intent</text>
+  <text x="948" y="274" class="p">Fill missing constraints</text>
+
+  <rect x="1218" y="192" width="260" height="140" class="node"/>
+  <text x="1242" y="228" class="h">5. Personalization</text>
+  <text x="1242" y="252" class="p">Profile and thread memory</text>
+  <text x="1242" y="274" class="p">User preference shaping</text>
+
+  <rect x="1522" y="192" width="350" height="140" class="node"/>
+  <text x="1546" y="228" class="h">6. Tone Stylist</text>
+  <text x="1546" y="252" class="p">Apply selected tone strategy</text>
+  <text x="1546" y="274" class="p">Keep communication consistent</text>
+
+  <rect x="46" y="392" width="1868" height="224" class="lane"/>
+  <text x="70" y="428" class="lane-title">Stage Group B - Generation and Validation</text>
+
+  <rect x="252" y="452" width="340" height="140" class="node"/>
+  <text x="276" y="488" class="h">7. Draft Writer</text>
+  <text x="276" y="512" class="p">Generate structured email draft</text>
+  <text x="276" y="534" class="p">Apply content constraints</text>
+
+  <rect x="650" y="452" width="430" height="140" class="gate"/>
+  <text x="674" y="488" class="h">8. Review Validator</text>
+  <text x="674" y="512" class="p">Score clarity, tone, factuality</text>
+  <text x="674" y="534" class="p">Decide pass, refine, or fallback</text>
+
+  <rect x="1138" y="452" width="570" height="140" class="node"/>
+  <text x="1162" y="488" class="h">9. Router + Memory</text>
+  <text x="1162" y="512" class="p">Persist draft status and context</text>
+  <text x="1162" y="534" class="p">Return final response payload</text>
+
+  <rect x="46" y="652" width="1868" height="282" class="lane"/>
+  <text x="70" y="688" class="lane-title">Recovery and Reliability Layer</text>
+
+  <rect x="510" y="726" width="430" height="180" class="warn"/>
+  <text x="534" y="764" class="h">Fallback and Retry Controller</text>
+  <text x="534" y="790" class="p">Retries transient provider failures within limits</text>
+  <text x="534" y="814" class="p">Repairs structured output once when needed</text>
+  <text x="534" y="838" class="p">Uses deterministic safe template on exhaustion</text>
+
+  <rect x="1006" y="726" width="470" height="180" class="node"/>
+  <text x="1030" y="764" class="h">Final Delivery Path</text>
+  <text x="1030" y="790" class="p">Approved draft to UI + audit trail</text>
+  <text x="1030" y="814" class="p">Metrics and memory updates completed</text>
+
+  <path class="edge" d="M312 262 C330 262,338 262,356 262"/>
+  <path class="edge" d="M586 262 C604 262,612 262,630 262"/>
+  <path class="edge" d="M880 262 C898 262,906 262,924 262"/>
+  <path class="edge" d="M1174 262 C1192 262,1200 262,1218 262"/>
+  <path class="edge" d="M1478 262 C1496 262,1504 262,1522 262"/>
+
+  <path class="edge2" d="M1698 332 C1698 378,1202 382,1080 452"/>
+  <path class="edge2" d="M422 592 C422 648,632 676,694 726"/>
+  <path class="edge2" d="M864 592 C864 648,864 676,864 726"/>
+  <path class="edge2" d="M1424 592 C1424 648,1328 676,1240 726"/>
+
+  <path class="edge3" d="M940 816 C964 816,980 816,1006 816"/>
+</svg>
