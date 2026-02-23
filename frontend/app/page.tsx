@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { loginUser, registerUser } from "@/lib/api";
 import { showErrorPopup } from "@/lib/error-popup";
-import { saveSessionAuth } from "@/lib/session";
+import { getRoleFromToken, saveSessionAuth } from "@/lib/session";
 
 type Role = "user" | "admin";
 type Mode = "login" | "register";
@@ -71,9 +72,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const response = await loginUser(username, password);
+      const authenticatedRole = getRoleFromToken(response.access_token) ?? "user";
       saveSessionAuth({
         userId: username,
-        role,
+        role: authenticatedRole,
         token: response.access_token,
         expiresAt: Date.now() + response.expires_in_minutes * 60 * 1000
       });
@@ -103,9 +105,10 @@ export default function LoginPage() {
     setLoading(true);
     registerUser(username, password, role, email || undefined)
       .then((response) => {
+        const authenticatedRole = getRoleFromToken(response.access_token) ?? role;
         saveSessionAuth({
           userId: username,
-          role,
+          role: authenticatedRole,
           token: response.access_token,
           expiresAt: Date.now() + response.expires_in_minutes * 60 * 1000
         });
@@ -132,6 +135,13 @@ export default function LoginPage() {
           <p className="eyebrow">Enterprise Agentic Workspace</p>
           <h1>AI Email Assistant</h1>
           <p className="meta">Secure database authentication with production-grade drafting, voice tooling, and evaluation controls.</p>
+          <div className="public-links">
+            <Link href="/architecture">Architecture</Link>
+            <Link href="/architecture-map">Architecture Map</Link>
+            <Link href="/workflows">Workflows</Link>
+            <Link href="/quality">Quality</Link>
+            <Link href="/docs">Docs</Link>
+          </div>
         </aside>
 
         <section className="auth-card">

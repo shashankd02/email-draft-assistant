@@ -212,6 +212,8 @@ class EvaluationHarness:
         fallback_success_rate = 1.0
         if fallback_trigger_count > 0:
             fallback_success_rate = round(fallback_success_count / fallback_trigger_count, 4)
+        else:
+            fallback_success_rate = None
         avg_bleu = round(mean(bleu_scores), 4) if bleu_scores else 0.0
         avg_rouge_l = round(mean(rouge_l_scores), 4) if rouge_l_scores else 0.0
 
@@ -222,7 +224,11 @@ class EvaluationHarness:
                 "factuality": True,
                 "safety_pass_rate": safety_pass_rate >= settings.eval_safety_pass_threshold,
                 "structured_output_validity": structured_output_validity >= settings.eval_structured_output_threshold,
-                "fallback_success_rate": fallback_success_rate >= settings.eval_fallback_success_threshold,
+                "fallback_success_rate": (
+                    True
+                    if fallback_success_rate is None
+                    else fallback_success_rate >= settings.eval_fallback_success_threshold
+                ),
                 "bleu": True,
                 "rouge_l": True,
             }
@@ -233,7 +239,11 @@ class EvaluationHarness:
                 "factuality": avg_factuality >= settings.eval_factuality_threshold,
                 "safety_pass_rate": safety_pass_rate >= settings.eval_safety_pass_threshold,
                 "structured_output_validity": structured_output_validity >= settings.eval_structured_output_threshold,
-                "fallback_success_rate": fallback_success_rate >= settings.eval_fallback_success_threshold,
+                "fallback_success_rate": (
+                    True
+                    if fallback_success_rate is None
+                    else fallback_success_rate >= settings.eval_fallback_success_threshold
+                ),
                 "bleu": avg_bleu >= 0.1,
                 "rouge_l": avg_rouge_l >= 0.1,
             }
@@ -253,6 +263,8 @@ class EvaluationHarness:
                 "safety_pass_rate": safety_pass_rate,
                 "structured_output_validity": structured_output_validity,
                 "fallback_success_rate": fallback_success_rate,
+                "fallback_trigger_count": fallback_trigger_count,
+                "fallback_success_count": fallback_success_count,
                 "avg_bleu": avg_bleu,
                 "avg_rouge_l": avg_rouge_l,
             },

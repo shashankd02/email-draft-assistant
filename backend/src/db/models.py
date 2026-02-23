@@ -51,6 +51,8 @@ class Draft(Base):
     user_id: Mapped[str] = mapped_column(String(64), ForeignKey("users.id"), index=True)
     intent: Mapped[str] = mapped_column(String(64))
     tone: Mapped[str] = mapped_column(String(64))
+    language: Mapped[str] = mapped_column(String(16), default="en")
+    input_mode: Mapped[str] = mapped_column(String(16), default="text")
     draft_text: Mapped[str] = mapped_column(Text)
     model_used: Mapped[str] = mapped_column(String(128))
     fallback_used: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -137,3 +139,31 @@ class EvalRunItem(Base):
     factuality: Mapped[float] = mapped_column(Float)
     overall: Mapped[float] = mapped_column(Float)
     model_used: Mapped[str] = mapped_column(String(128))
+
+
+class ThreadMemory(Base):
+    __tablename__ = "thread_memories"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    thread_id: Mapped[str] = mapped_column(String(64), index=True)
+    user_id: Mapped[str] = mapped_column(String(64), ForeignKey("users.id"), index=True)
+    title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    intent: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    tone: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    prompt_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    draft_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_public: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    metadata_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+class VoiceTranscript(Base):
+    __tablename__ = "voice_transcripts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    request_id: Mapped[str] = mapped_column(String(64), index=True)
+    user_id: Mapped[str] = mapped_column(String(64), ForeignKey("users.id"), index=True)
+    language: Mapped[str] = mapped_column(String(16), default="en")
+    transcript: Mapped[str] = mapped_column(Text)
+    provider: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)

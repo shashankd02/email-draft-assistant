@@ -50,17 +50,9 @@ class OpenAITTSProvider(TTSProvider):
         )
 
 
-class MockTTSProvider(TTSProvider):
-    def synthesize(self, text: str, persona_id: str | None = None) -> TTSResult:
-        payload = f"MOCK_AUDIO::{persona_id or 'default'}::{text}".encode("utf-8")
-        return TTSResult(
-            audio_base64=base64.b64encode(payload).decode("utf-8"),
-            mime_type="text/plain",
-            provider="mock",
-        )
-
-
 def get_tts_provider() -> TTSProvider:
     if settings.openai_api_key:
         return OpenAITTSProvider()
-    return MockTTSProvider()
+    if settings.strict_provider_mode:
+        raise RuntimeError("No real TTS provider configured. Set OPENAI_API_KEY.")
+    raise RuntimeError("TTS provider unavailable")

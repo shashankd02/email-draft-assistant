@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from typing import Callable
 
 from openai import OpenAI
@@ -13,6 +14,10 @@ class DraftGenerationResult:
     draft_text: str
     model_used: str
     provider: str
+
+
+class StructuredOutputError(RuntimeError):
+    pass
 
 
 class LLMProvider:
@@ -54,7 +59,8 @@ class OpenAILLMProvider(LLMProvider):
             "You are an enterprise email drafting assistant. "
             "Generate concise, clear, and professional email drafts with strict tone control. "
             "Do not include private data or fabricated facts. "
-            "If details are missing, keep placeholders instead of guessing."
+            "If details are missing, keep placeholders instead of guessing. "
+            "Return JSON only."
         )
         user_prompt = (
             f"Intent: {intent}\n"
@@ -63,45 +69,47 @@ class OpenAILLMProvider(LLMProvider):
             f"Metadata: {metadata}\n"
             f"{grounding_note}"
             f"Request: {prompt}\n\n"
-            "Return only the final email text."
+            'Return JSON with this schema exactly: {"draft_text":"<email text>"}'
         )
+        raw = self._complete_json(system_prompt, user_prompt)
+        parsed = self._parse_structured_draft(raw)
+        if parsed is None:
+            repair_prompt = (
+                "Convert the following content into valid JSON with this exact schema: "
+                '{"draft_text":"<email text>"}\n\n'
+                f"CONTENT:\n{raw}"
+            )
+            repaired_raw = self._complete_json(
+                "You repair malformed output to strict JSON. Return JSON only.",
+                repair_prompt,
+            )
+            parsed = self._parse_structured_draft(repaired_raw)
+            if parsed is None:
+                raise StructuredOutputError("Structured output validation failed after one repair attempt.")
+        return DraftGenerationResult(draft_text=parsed, model_used=settings.openai_text_model, provider="openai")
+
+    def _complete_json(self, system_prompt: str, user_prompt: str) -> str:
         result = self.client.chat.completions.create(
             model=settings.openai_text_model,
-            temperature=0.3,
+            temperature=0.2,
+            timeout=settings.hard_timeout_e2e_seconds,
+            response_format={"type": "json_object"},
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
         )
-        text = result.choices[0].message.content or ""
-        return DraftGenerationResult(draft_text=text.strip(), model_used=settings.openai_text_model, provider="openai")
+        return (result.choices[0].message.content or "").strip()
 
-
-class TemplateLLMProvider(LLMProvider):
-    def generate_email_draft(
-        self,
-        *,
-        prompt: str,
-        intent: str,
-        tone: str,
-        constraints: dict,
-        metadata: dict,
-    ) -> DraftGenerationResult:
-        opener = {
-            "professional": "Dear Team,",
-            "casual": "Hi everyone,",
-            "assertive": "Team,",
-            "empathetic": "Hello team,",
-        }.get(tone, "Dear Team,")
-
-        body = (
-            f"{opener}\n\n"
-            f"I am writing regarding: {prompt}. "
-            f"This message is categorized as '{intent}' and follows the requested '{tone}' tone.\n\n"
-            "Please review and let me know if you would like any adjustments before sending.\n\n"
-            "Best regards,\nYour Name"
-        )
-        return DraftGenerationResult(draft_text=body, model_used="template-fallback", provider="local")
+    def _parse_structured_draft(self, content: str) -> str | None:
+        if not content:
+            return None
+        try:
+            payload = json.loads(content)
+        except json.JSONDecodeError:
+            return None
+        text = str(payload.get("draft_text", "")).strip() if isinstance(payload, dict) else ""
+        return text or None
 
 
 class RoutingLLMProvider(LLMProvider):
@@ -141,5 +149,5 @@ def get_llm_provider() -> LLMProvider:
     if settings.openai_api_key:
         provider_factories.append(lambda: OpenAILLMProvider())
     if not provider_factories:
-        provider_factories.append(lambda: TemplateLLMProvider())
+        raise RuntimeError("No real LLM provider configured. Set OPENAI_API_KEY.")
     return RoutingLLMProvider(provider_factories)

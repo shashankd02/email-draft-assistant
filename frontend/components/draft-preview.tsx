@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { invokeMcpTool, type DraftResponse } from "@/lib/api";
 import { showErrorPopup } from "@/lib/error-popup";
 
@@ -89,15 +89,6 @@ export function DraftPreview({ draft, token, userId }: Props) {
     setAudioSignature(null);
   }, [ttsTone, draft?.request_id, draft?.draft_text]);
 
-  useEffect(() => {
-    if (!draft?.draft_text?.trim()) return;
-    if (preloadingRef.current) return;
-    preloadingRef.current = true;
-    void ensureTtsAudio(true).finally(() => {
-      preloadingRef.current = false;
-    });
-  }, [draft?.request_id, draft?.draft_text, ttsTone]);
-
   async function handleCopy() {
     const text = draft?.draft_text?.trim();
     if (!text) return;
@@ -110,7 +101,7 @@ export function DraftPreview({ draft, token, userId }: Props) {
     }
   }
 
-  async function ensureTtsAudio(silent = false): Promise<HTMLAudioElement | null> {
+  const ensureTtsAudio = useCallback(async (silent = false): Promise<HTMLAudioElement | null> => {
     if (!draft?.draft_text?.trim()) {
       if (!silent) {
         showErrorPopup("Generate a draft first before using text-to-speech.", "No draft available");
@@ -160,7 +151,16 @@ export function DraftPreview({ draft, token, userId }: Props) {
     } finally {
       setProcessingTts(false);
     }
-  }
+  }, [audioSignature, audioUrl, draft?.draft_text, signature, token, ttsTone, userId]);
+
+  useEffect(() => {
+    if (!draft?.draft_text?.trim()) return;
+    if (preloadingRef.current) return;
+    preloadingRef.current = true;
+    void ensureTtsAudio(true).finally(() => {
+      preloadingRef.current = false;
+    });
+  }, [draft?.request_id, draft?.draft_text, ttsTone, ensureTtsAudio]);
 
   async function waitUntilPlayable(audio: HTMLAudioElement): Promise<void> {
     if (audio.readyState >= 2) return;

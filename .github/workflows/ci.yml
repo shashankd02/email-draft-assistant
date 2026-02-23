@@ -5,9 +5,27 @@ on:
     branches: ["**"]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: email_assistant
+          POSTGRES_USER: email_assistant
+          POSTGRES_PASSWORD: email_assistant
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U email_assistant -d email_assistant"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: backend
@@ -23,15 +41,24 @@ jobs:
       - name: Install backend deps
         run: pip install -r requirements.txt
 
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgresql+psycopg://email_assistant:email_assistant@localhost:5432/email_assistant
+          STRICT_PROVIDER_MODE: "false"
+        run: alembic upgrade head
+
       - name: Compile backend
         run: python -m compileall src
 
       - name: Run backend tests (unit + integration)
         env:
           DATABASE_URL: postgresql+psycopg://email_assistant:email_assistant@localhost:5432/email_assistant
+          STRICT_PROVIDER_MODE: "false"
         run: pytest -q
 
       - name: Eval smoke (core + adversarial + voice)
+        env:
+          STRICT_PROVIDER_MODE: "false"
         run: |
           python - <<'PY'
           from src.evaluation.harness import EvaluationHarness
@@ -67,9 +94,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend deps
-        run: npm install
+        run: npm ci
+
+      - name: Lint frontend
+        run: npm run lint
 
       - name: Type check/build
         run: npm run build

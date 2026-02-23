@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from src.auth.security import Principal, enforce_user_scope, get_current_principal
 from src.core.config import settings
-from src.core.errors import rate_limited, replay_detected
+from src.core.errors import rate_limited, replay_detected, upstream_unavailable
 from src.core.models import DraftGenerateRequest, DraftGenerateResponse
 from src.db.repositories import get_draft_by_request_id, write_audit_log
 from src.db.session import SessionLocal
@@ -32,7 +32,12 @@ def generate_draft(
     if existing is not None:
         raise replay_detected("Duplicate request_id detected")
 
-    response = workflow.run(payload)
+    try:
+        response = workflow.run(payload)
+    except HTTPException:
+        raise
+    except Exception:
+        raise upstream_unavailable("Draft generation is temporarily unavailable. Please try again shortly.")
     with SessionLocal() as db:
         write_audit_log(
             db,

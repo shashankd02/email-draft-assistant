@@ -1,0 +1,13 @@
+# Default ownership
+* @shashankdewangan
+
+# Backend and data
+backend/** @shashankdewangan
+
+# Frontend
+frontend/** @shashankdewangan
+
+# CI/CD and governance
+.github/** @shashankdewangan
+AGENTS.md @shashankdewangan
+spec_dev.md @shashankdewangan

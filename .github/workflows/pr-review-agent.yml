@@ -1,0 +1,95 @@
+name: PR Review Agent
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review-agent:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Review changed files and post checklist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = context.issue.number;
+
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner, repo, pull_number, per_page: 100 }
+            );
+            const names = files.map(f => f.filename);
+
+            const touchedBackend = names.some(n => n.startsWith("backend/src/"));
+            const touchedFrontend = names.some(n => n.startsWith("frontend/"));
+            const touchedTests = names.some(n => n.startsWith("backend/tests/") || n.includes(".test.") || n.includes(".spec."));
+            const touchedMigrations = names.some(n => n.startsWith("backend/alembic/versions/"));
+            const touchedDocs = names.some(n => n === "README.md" || n === "spec_dev.md");
+            const touchedWorkflows = names.some(n => n.startsWith(".github/workflows/"));
+
+            const findings = [];
+            if (touchedBackend && !touchedTests) {
+              findings.push("Backend source changed without accompanying test updates.");
+            }
+            if (touchedMigrations && !touchedDocs) {
+              findings.push("Schema migration changed without README/spec update.");
+            }
+            if (touchedWorkflows) {
+              findings.push("CI/workflow files changed. Require maintainer review before merge.");
+            }
+
+            const checks = [
+              `- Backend touched: ${touchedBackend ? "yes" : "no"}`,
+              `- Frontend touched: ${touchedFrontend ? "yes" : "no"}`,
+              `- Tests touched: ${touchedTests ? "yes" : "no"}`,
+              `- Migrations touched: ${touchedMigrations ? "yes" : "no"}`,
+              `- Docs touched: ${touchedDocs ? "yes" : "no"}`,
+            ];
+
+            const body = [
+              "<!-- pr-review-agent-comment -->",
+              "## PR Review Agent",
+              "",
+              "Automated review summary for this pull request:",
+              "",
+              ...checks,
+              "",
+              findings.length
+                ? "### Findings"
+                : "### Findings",
+              ...(findings.length ? findings.map(f => `- ⚠️ ${f}`) : ["- ✅ No structural risks detected."]),
+              "",
+              "### Required Human Review Focus",
+              "- Validate intent guard and safety behavior for agent changes.",
+              "- Validate auth/data-access boundaries for API changes.",
+              "- Validate UX impact for frontend interaction changes.",
+            ].join("\n");
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: pull_number, per_page: 100 }
+            );
+            const existing = comments.find(c => c.body && c.body.includes("<!-- pr-review-agent-comment -->"));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pull_number,
+                body
+              });
+            }

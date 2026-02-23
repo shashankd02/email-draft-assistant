@@ -4,8 +4,14 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from src.auth.security import Principal, enforce_user_scope, get_current_principal
+from src.core.errors import upstream_unavailable
 from src.core.models import VoiceSegment, VoiceTranscribeResponse
-from src.db.repositories import get_default_voice_persona_id, list_active_voice_personas, set_default_voice_persona
+from src.db.repositories import (
+    get_default_voice_persona_id,
+    list_active_voice_personas,
+    save_voice_transcript,
+    set_default_voice_persona,
+)
 from src.db.session import SessionLocal
 from src.services.voice_provider import get_voice_provider
 
@@ -21,10 +27,26 @@ async def transcribe_voice(
 ) -> VoiceTranscribeResponse:
     enforce_user_scope(principal, user_id)
     audio_bytes = await audio_file.read()
-    provider = get_voice_provider()
-    result = await provider.transcribe(audio_bytes, language, audio_file.content_type or "audio/webm")
+    try:
+        provider = get_voice_provider()
+        result = await provider.transcribe(audio_bytes, language, audio_file.content_type or "audio/webm")
+    except HTTPException:
+        raise
+    except Exception:
+        raise upstream_unavailable("Voice transcription is temporarily unavailable. Please try again shortly.")
+    request_id = str(uuid4())
+    with SessionLocal() as db:
+        save_voice_transcript(
+            db,
+            request_id=request_id,
+            user_id=user_id,
+            language=language,
+            transcript=result.transcript,
+            provider=result.provider,
+        )
+        db.commit()
     return VoiceTranscribeResponse(
-        request_id=str(uuid4()),
+        request_id=request_id,
         transcript=result.transcript,
         segments=result.segments
         if result.segments

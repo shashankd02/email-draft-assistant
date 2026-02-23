@@ -3,6 +3,7 @@ import binascii
 import json
 from hashlib import sha256
 from time import perf_counter
+from urllib.parse import parse_qs
 
 from fastapi import APIRouter, Depends, HTTPException
 import httpx
@@ -10,7 +11,15 @@ from pydantic import BaseModel
 
 from src.auth.security import Principal, enforce_user_scope, get_current_principal
 from src.db.models import UserProfile
-from src.db.repositories import get_default_voice_persona_id, upsert_profile_fields, write_audit_log, write_tool_event
+from src.db.repositories import (
+    get_default_voice_persona_id,
+    list_public_thread_memories,
+    list_thread_memories,
+    upsert_profile_fields,
+    write_audit_log,
+    write_thread_memory,
+    write_tool_event,
+)
 from src.db.session import SessionLocal
 from src.mcp.contracts import MCP_RESOURCES, MCP_TOOLS
 from src.services.search_provider import get_search_provider
@@ -159,7 +168,16 @@ async def invoke_tool(req: MCPInvokeRequest, principal: Principal = Depends(get_
                 fallback_path="send non-empty query",
             )
         recency_days = int(req.payload.get("recency_days", 7))
-        result = get_search_provider().search(query=query, recency_days=recency_days)
+        try:
+            result = get_search_provider().search(query=query, recency_days=recency_days)
+        except Exception:
+            raise mcp_error(
+                status_code=503,
+                error_code="UPSTREAM_UNAVAILABLE",
+                message="Web search provider is temporarily unavailable",
+                retryable=True,
+                fallback_path="proceed without web context",
+            )
         with SessionLocal() as db:
             write_audit_log(
                 db,
@@ -313,23 +331,25 @@ async def invoke_tool(req: MCPInvokeRequest, principal: Principal = Depends(get_
                 actor_user_id=principal.user_id,
                 action=f"mcp.invoke:{req.tool_name}",
                 resource=req.payload.get("resource"),
-                decision="allow",
-                reason="stubbed_tool",
+                decision="deny",
+                reason="tool_not_implemented",
             )
             write_tool_event(
                 db,
                 request_id=request_id,
                 tool_name=req.tool_name,
-                status="stubbed",
+                status="not_implemented",
                 latency_ms=int((perf_counter() - start) * 1000),
                 payload_hash=payload_hash,
             )
             db.commit()
-        response_payload = {
-            "status": "ok",
-            "decision": "allowed",
-            "message": "Tool registered; provider execution path is not yet implemented for this tool.",
-        }
+        raise mcp_error(
+            status_code=501,
+            error_code="TOOL_NOT_IMPLEMENTED",
+            message="Tool is registered but not implemented",
+            retryable=False,
+            fallback_path=None,
+        )
 
     return response_payload
 
@@ -364,6 +384,32 @@ def read_resource(req: MCPResourceReadRequest, principal: Principal = Depends(ge
                 "version": profile.version,
             },
         }
+
+    if req.uri.startswith("memory://user/") and "/threads" in req.uri:
+        uri_without_query, _, query = req.uri.partition("?")
+        parts = uri_without_query.split("/")
+        user_id = parts[3] if len(parts) > 3 else ""
+        enforce_user_scope(principal, user_id)
+        params = parse_qs(query)
+        limit = 20
+        if "limit" in params and params["limit"]:
+            try:
+                limit = int(params["limit"][0])
+            except ValueError:
+                limit = 20
+        include_public = True
+        if "include_public" in params and params["include_public"]:
+            include_public = str(params["include_public"][0]).lower() not in {"0", "false", "no"}
+        with SessionLocal() as db:
+            threads = list_thread_memories(db, user_id, limit=limit)
+            if principal.role != "admin" and include_public:
+                public_threads = list_public_thread_memories(db, limit=limit)
+                own_ids = {item["thread_id"] for item in threads}
+                for item in public_threads:
+                    if item["thread_id"] not in own_ids:
+                        threads.append(item)
+                threads = sorted(threads, key=lambda x: x.get("created_at", ""), reverse=True)[: max(1, min(limit, 100))]
+        return {"status": "ok", "uri": req.uri, "data": {"threads": threads}}
 
     if req.uri.startswith("templates://email/"):
         template_id = req.uri.split("/")[-1]
@@ -413,10 +459,19 @@ def write_resource(req: MCPResourceWriteRequest, principal: Principal = Depends(
             db.commit()
         return {"status": "ok", "uri": req.uri, "version": version}
 
+    if req.uri.startswith("memory://user/") and req.uri.endswith("/threads"):
+        parts = req.uri.split("/")
+        user_id = parts[3] if len(parts) > 3 else ""
+        enforce_user_scope(principal, user_id)
+        with SessionLocal() as db:
+            thread_id = write_thread_memory(db, user_id, req.data)
+            db.commit()
+        return {"status": "ok", "uri": req.uri, "thread_id": thread_id}
+
     raise mcp_error(
         status_code=403,
         error_code="RESOURCE_READ_ONLY",
-        message="Only memory profile resource is writable",
+        message="Only memory profile and memory threads resources are writable",
         retryable=False,
-        fallback_path="write to memory://user/{user_id}/profile",
+        fallback_path="write to memory://user/{user_id}/profile or memory://user/{user_id}/threads",
     )

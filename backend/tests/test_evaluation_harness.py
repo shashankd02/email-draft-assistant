@@ -7,6 +7,8 @@ def test_core_eval_smoke() -> None:
     assert result["summary"]["total_cases"] == 1
     assert "metrics" in result
     assert "structured_output_validity" in result["metrics"]
+    assert "fallback_trigger_count" in result["metrics"]
+    assert "fallback_success_count" in result["metrics"]
 
 
 def test_adversarial_eval_smoke() -> None:

@@ -46,14 +46,9 @@ class TavilySearchProvider(SearchProvider):
         return SearchResult(citations=citations, confidence=confidence, provider="tavily")
 
 
-class MockSearchProvider(SearchProvider):
-    def search(self, query: str, recency_days: int = 7) -> SearchResult:
-        _ = query
-        _ = recency_days
-        return SearchResult(citations=[], confidence=0.0, provider="mock")
-
-
 def get_search_provider() -> SearchProvider:
     if settings.tavily_api_key:
         return TavilySearchProvider()
-    return MockSearchProvider()
+    if settings.strict_provider_mode:
+        raise RuntimeError("No real search provider configured. Set TAVILY_API_KEY.")
+    raise RuntimeError("Search provider unavailable")

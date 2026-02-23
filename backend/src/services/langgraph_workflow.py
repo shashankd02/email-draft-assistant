@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from time import perf_counter
 from typing import Any, TypedDict
 
 from langgraph.graph import END, StateGraph
@@ -15,6 +16,7 @@ from src.agents.router_memory import RoutingMemoryAgent
 from src.agents.security_guard import SecurityGuardAgent
 from src.agents.tone_stylist import ToneStylistAgent
 from src.core.config import settings
+from src.core.metrics import get_metrics_store
 
 
 class GraphState(TypedDict, total=False):
@@ -49,6 +51,19 @@ class LangGraphWorkflow:
         self.security = SecurityGuardAgent()
         self.graph = self._compile_graph()
 
+    def _run_node(self, state: GraphState, node_name: str, runner) -> GraphState:
+        start = perf_counter()
+        state_obj = self._to_state_obj(state)
+        output = self._to_dict(runner(state_obj))
+        latency_ms = (perf_counter() - start) * 1000
+        get_metrics_store().record_node_timing(node_name, latency_ms)
+        metadata = output.get("metadata", {}) or {}
+        agent_timings = dict(metadata.get("agent_timings_ms", {}))
+        agent_timings[node_name] = round(latency_ms, 2)
+        metadata["agent_timings_ms"] = agent_timings
+        output["metadata"] = metadata
+        return output
+
     def _compile_graph(self):
         graph = StateGraph(GraphState)
 
@@ -80,6 +95,7 @@ class LangGraphWorkflow:
                 "success": END,
                 "retry": "n_draft",
                 "quality_failed": END,
+                "upstream_failed": END,
                 "blocked": END,
             },
         )
@@ -96,42 +112,34 @@ class LangGraphWorkflow:
         return data
 
     def _security(self, state: GraphState) -> GraphState:
-        state_obj = self._to_state_obj(state)
-        return self._to_dict(self.security.run(state_obj))
+        return self._run_node(state, "security_guard", self.security.run)
 
     def _parse(self, state: GraphState) -> GraphState:
-        state_obj = self._to_state_obj(state)
-        return self._to_dict(self.input_parser.run(state_obj))
+        return self._run_node(state, "input_parser", self.input_parser.run)
 
     def _intent(self, state: GraphState) -> GraphState:
-        state_obj = self._to_state_obj(state)
-        return self._to_dict(self.intent_detector.run(state_obj))
+        return self._run_node(state, "intent_detection", self.intent_detector.run)
 
     def _tone(self, state: GraphState) -> GraphState:
-        state_obj = self._to_state_obj(state)
-        return self._to_dict(self.tone_stylist.run(state_obj))
+        return self._run_node(state, "tone_stylist", self.tone_stylist.run)
 
     def _personalize(self, state: GraphState) -> GraphState:
-        state_obj = self._to_state_obj(state)
-        return self._to_dict(self.personalization.run(state_obj))
+        return self._run_node(state, "personalization", self.personalization.run)
 
     def _context(self, state: GraphState) -> GraphState:
-        state_obj = self._to_state_obj(state)
-        return self._to_dict(self.context_enrichment.run(state_obj))
+        return self._run_node(state, "context_enrichment", self.context_enrichment.run)
 
     def _refine(self, state: GraphState) -> GraphState:
-        state_obj = self._to_state_obj(state)
-        return self._to_dict(self.prompt_refiner.run(state_obj))
+        return self._run_node(state, "prompt_refiner", self.prompt_refiner.run)
 
     def _draft(self, state: GraphState) -> GraphState:
-        state_obj = self._to_state_obj(state)
-        return self._to_dict(self.draft_writer.run(state_obj))
+        return self._run_node(state, "draft_writer", self.draft_writer.run)
 
     def _review(self, state: GraphState) -> GraphState:
-        state_obj = self._to_state_obj(state)
-        return self._to_dict(self.review.run(state_obj))
+        return self._run_node(state, "review_validator", self.review.run)
 
     def _route(self, state: GraphState) -> GraphState:
+        start = perf_counter()
         state_obj = self._to_state_obj(state)
         state_obj = self.router.run(state_obj)
 
@@ -141,6 +149,13 @@ class LangGraphWorkflow:
             if total_retries >= settings.max_total_retries:
                 state_obj.final_status = "quality_failed"
         output = self._to_dict(state_obj)
+        latency_ms = (perf_counter() - start) * 1000
+        get_metrics_store().record_node_timing("router_memory", latency_ms)
+        metadata = output.get("metadata", {}) or {}
+        agent_timings = dict(metadata.get("agent_timings_ms", {}))
+        agent_timings["router_memory"] = round(latency_ms, 2)
+        metadata["agent_timings_ms"] = agent_timings
+        output["metadata"] = metadata
         output["total_retries"] = total_retries
         return output
 
@@ -156,7 +171,7 @@ class LangGraphWorkflow:
 
     def _route_decision(self, state: GraphState) -> str:
         status = state.get("final_status", "quality_failed")
-        if status in {"success", "retry", "quality_failed", "blocked"}:
+        if status in {"success", "retry", "quality_failed", "upstream_failed", "blocked"}:
             return status
         return "quality_failed"
 

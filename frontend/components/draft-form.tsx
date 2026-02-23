@@ -16,6 +16,7 @@ export function DraftForm({ onDraft, userId, token }: Props) {
   const [intent, setIntent] = useState("outreach");
   const [tone, setTone] = useState("professional");
   const [language, setLanguage] = useState("en");
+  const [inputMode, setInputMode] = useState<"text" | "voice">("text");
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recordMs, setRecordMs] = useState(0);
@@ -107,6 +108,7 @@ export function DraftForm({ onDraft, userId, token }: Props) {
       const transcript = String(result.result?.transcript || "").trim();
       if (transcript) {
         setPrompt(normalizeTranscriptText(transcript));
+        setInputMode("voice");
       } else {
         showErrorPopup("No speech was detected. Please try again.", "Transcription failed");
       }
@@ -156,7 +158,8 @@ export function DraftForm({ onDraft, userId, token }: Props) {
         },
         metadata: {
           recipient_role: "client",
-          language
+          language,
+          input_mode: inputMode,
         }
       }, token, controller.signal);
       if (controller.signal.aborted) {
@@ -253,7 +256,10 @@ export function DraftForm({ onDraft, userId, token }: Props) {
           id="prompt"
           rows={8}
           value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          onChange={(e) => {
+            setPrompt(e.target.value);
+            if (inputMode !== "text") setInputMode("text");
+          }}
           disabled={loading || voiceLocked}
           required
         />

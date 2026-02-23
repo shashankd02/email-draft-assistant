@@ -84,20 +84,6 @@ class DeepgramVoiceProvider(VoiceProvider):
         )
 
 
-class MockVoiceProvider(VoiceProvider):
-    async def transcribe(self, audio_bytes: bytes, language: str, mime_type: str = "audio/wav") -> TranscriptionResult:
-        _ = audio_bytes
-        _ = language
-        _ = mime_type
-        text = "Sample transcript placeholder from local scaffold."
-        return TranscriptionResult(
-            transcript=text,
-            segments=[VoiceSegment(speaker="S1", start_ms=0, end_ms=2400, text=text)],
-            confidence=0.60,
-            provider="mock",
-        )
-
-
 class RoutingVoiceProvider(VoiceProvider):
     def __init__(self, providers: list[Callable[[], VoiceProvider]]) -> None:
         self._provider_factories = providers
@@ -122,6 +108,8 @@ def get_voice_provider() -> VoiceProvider:
         providers.append(lambda: DeepgramVoiceProvider())
     if settings.openai_api_key:
         providers.append(lambda: OpenAIVoiceProvider())
+    if not providers and settings.strict_provider_mode:
+        raise RuntimeError("No real voice provider configured. Set DEEPGRAM_API_KEY or OPENAI_API_KEY.")
     if not providers:
-        providers.append(lambda: MockVoiceProvider())
+        raise RuntimeError("Voice provider unavailable")
     return RoutingVoiceProvider(providers)

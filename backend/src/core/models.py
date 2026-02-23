@@ -21,6 +21,7 @@ class DraftConstraint(BaseModel):
 class DraftMetadata(BaseModel):
     recipient_role: str = "general"
     language: str = "en"
+    input_mode: str = "text"
 
 
 class DraftGenerateRequest(BaseModel):

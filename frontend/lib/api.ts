@@ -11,6 +11,7 @@ export type DraftRequest = {
   metadata: {
     recipient_role: string;
     language: string;
+    input_mode: string;
   };
 };
 
@@ -79,6 +80,102 @@ export type EvalRunResponse = {
     };
     model_used: string;
   }>;
+};
+
+export type HealthResponse = {
+  status: string;
+  strict_provider_mode: boolean;
+  strict_provider_ready: boolean;
+  strict_provider_requirements: Record<string, boolean>;
+  dependencies: Record<string, string>;
+};
+
+export type ObservabilityMetricsResponse = {
+  status: string;
+  window: "24h" | "7d" | "30d";
+  live_metrics: Record<string, unknown>;
+  global_metrics: {
+    window_hours: number;
+    totals: {
+      registered_users: number;
+      total_identities: number;
+      drafts: number;
+    };
+    activity: {
+      drafts_in_window: number;
+      active_users_in_window: number;
+      tool_invocations_in_window: number;
+      voice_transcripts_in_window: number;
+      eval_runs_in_window: number;
+    };
+    quality: {
+      avg_overall_score: number;
+      fallback_rate: number;
+    };
+    latency: {
+      avg_latency_ms: number;
+      p95_latency_ms_in_window: number;
+    };
+    risk: {
+      denied_actions_7d: number;
+    };
+  };
+  recent_activity: Array<{
+    request_id: string;
+    created_at: string;
+    user_id: string;
+    intent: string;
+    tone: string;
+    language: string;
+    input_mode: string;
+    model_used: string;
+    fallback_used: boolean;
+    latency_ms: number;
+    overall_score: number | null;
+  }>;
+  integrations: {
+    langsmith: {
+      enabled: boolean;
+      tracing_flag: boolean;
+      project: string;
+      configured: boolean;
+    };
+  };
+};
+
+export type ObservabilityAlertsResponse = {
+  status: string;
+  thresholds: Record<string, number>;
+  current: {
+    live: {
+      p95_latency_ms: number;
+      fallback_rate: number;
+      provider_error_rate: number;
+      safety_failure_rate: number;
+      total_workflows: number;
+      outcomes: Record<string, number>;
+    };
+    global: {
+      window: "24h" | "7d" | "30d";
+      p95_latency_ms_in_window: number;
+      fallback_rate: number;
+      totals: Record<string, number>;
+      activity: Record<string, number>;
+      quality: Record<string, number>;
+    };
+  };
+  alerts: Record<string, boolean>;
+};
+
+export type LangSmithConfigResponse = {
+  status: string;
+  langsmith: {
+    enabled: boolean;
+    tracing_flag: boolean;
+    project: string;
+    configured: boolean;
+  };
+  note: string;
 };
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8002/api/v1";
@@ -215,10 +312,16 @@ export async function invokeMcpTool(
   return JSON.parse(bodyText) as MCPInvokeResponse;
 }
 
-export async function runEvaluation(token: string, dataset: "core" | "adversarial" | "voice", maxCases = 3): Promise<EvalRunResponse> {
+export async function runEvaluation(
+  token: string,
+  dataset: "core" | "adversarial" | "voice",
+  maxCases = 3,
+  signal?: AbortSignal,
+): Promise<EvalRunResponse> {
   const res = await fetch(`${baseUrl}/evaluation/run`, {
     method: "POST",
     headers: authHeader(token),
+    signal,
     body: JSON.stringify({
       dataset,
       max_cases: maxCases
@@ -231,14 +334,74 @@ export async function runEvaluation(token: string, dataset: "core" | "adversaria
   return JSON.parse(text) as EvalRunResponse;
 }
 
-export async function listEvalRuns(token: string, limit = 10): Promise<{ runs: EvalRunSummary[] }> {
+export async function listEvalRuns(token: string, limit = 10, signal?: AbortSignal): Promise<{ runs: EvalRunSummary[] }> {
   const res = await fetch(`${baseUrl}/evaluation/runs?limit=${limit}`, {
     method: "GET",
-    headers: authHeader(token)
+    headers: authHeader(token),
+    signal,
   });
   const text = await res.text();
   if (!res.ok) {
     throw new Error(parseApiErrorMessage(text, "Unable to load evaluation runs right now."));
   }
   return JSON.parse(text) as { runs: EvalRunSummary[] };
+}
+
+export async function getHealth(): Promise<HealthResponse> {
+  const res = await fetch(`${baseUrl}/health`, { method: "GET" });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(parseApiErrorMessage(text, "Unable to load service health."));
+  }
+  return JSON.parse(text) as HealthResponse;
+}
+
+export async function getObservabilityMetrics(
+  token: string,
+  window: "24h" | "7d" | "30d" = "24h",
+  signal?: AbortSignal,
+): Promise<ObservabilityMetricsResponse> {
+  const res = await fetch(`${baseUrl}/observability/metrics?window=${window}`, {
+    method: "GET",
+    headers: authHeader(token),
+    signal,
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(parseApiErrorMessage(text, "Unable to load observability metrics."));
+  }
+  return JSON.parse(text) as ObservabilityMetricsResponse;
+}
+
+export async function getObservabilityAlerts(
+  token: string,
+  window: "24h" | "7d" | "30d" = "24h",
+  signal?: AbortSignal,
+): Promise<ObservabilityAlertsResponse> {
+  const res = await fetch(`${baseUrl}/observability/alerts?window=${window}`, {
+    method: "GET",
+    headers: authHeader(token),
+    signal,
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(parseApiErrorMessage(text, "Unable to load observability alerts."));
+  }
+  return JSON.parse(text) as ObservabilityAlertsResponse;
+}
+
+export async function configureLangSmith(
+  token: string,
+  payload: { enabled: boolean; api_key?: string; project?: string },
+): Promise<LangSmithConfigResponse> {
+  const res = await fetch(`${baseUrl}/observability/integrations/langsmith`, {
+    method: "POST",
+    headers: authHeader(token),
+    body: JSON.stringify(payload),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(parseApiErrorMessage(text, "Unable to configure LangSmith right now."));
+  }
+  return JSON.parse(text) as LangSmithConfigResponse;
 }

@@ -72,6 +72,13 @@ class VectorMemoryService:
         except Exception:
             return False
 
+    def delete_user_memory(self, user_id: str) -> None:
+        try:
+            self.profile_collection.delete(where={"user_id": user_id})
+            self.style_collection.delete(where={"user_id": user_id})
+        except Exception:
+            return
+
 
 _service: VectorMemoryService | None = None
 
@@ -97,6 +104,9 @@ class NullVectorMemoryService(VectorMemoryService):
 
     def is_available(self) -> bool:
         return False
+
+    def delete_user_memory(self, user_id: str) -> None:
+        _ = user_id
 
 
 def get_vector_memory_service() -> VectorMemoryService:

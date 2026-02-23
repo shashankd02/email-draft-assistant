@@ -43,3 +43,26 @@ def test_mcp_tools_with_auth() -> None:
     )
     assert response.status_code == 200
     assert "tools" in response.json()
+
+
+def test_delete_my_transcripts_and_account() -> None:
+    register = client.post(
+        "/api/v1/auth/register",
+        json={"username": "cleanup-user", "password": "StrongPass123", "role": "user"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+
+    delete_transcripts = client.delete(
+        "/api/v1/auth/me/transcripts",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert delete_transcripts.status_code == 200
+    assert "deleted_transcripts" in delete_transcripts.json()
+
+    delete_account = client.delete(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert delete_account.status_code == 200
+    assert delete_account.json()["status"] == "ok"

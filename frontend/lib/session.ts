@@ -24,6 +24,15 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
+export function getRoleFromToken(token: string): "user" | "admin" | null {
+  const payload = decodeJwtPayload(token);
+  const role = String(payload?.role ?? "").toLowerCase();
+  if (role === "admin" || role === "user") {
+    return role;
+  }
+  return null;
+}
+
 export function loadSessionAuth(): SessionAuth | null {
   if (typeof window === "undefined") return null;
   const raw = window.sessionStorage.getItem(SESSION_KEY);

@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     chroma_database: str = "default_database"
     langsmith_tracing: bool = False
     langsmith_project: str = "email-assistant"
+    langsmith_api_key: str | None = None
 
     # Runtime controls from spec
     max_retries_per_agent: int = 2
@@ -45,7 +46,15 @@ class Settings(BaseSettings):
     draft_rate_limit_requests: int = 30
     draft_rate_limit_window_seconds: int = 60
     retention_drafts_days: int = 90
+    retention_transcripts_days: int = 30
     retention_logs_days: int = 90
+    retention_scheduler_enabled: bool = True
+    retention_scheduler_interval_minutes: int = 60
+    strict_provider_mode: bool = True
+    alert_p95_latency_ms_threshold: int = 12000
+    alert_fallback_rate_threshold: float = 0.2
+    alert_provider_error_rate_threshold: float = 0.05
+    alert_safety_failure_rate_threshold: float = 0.01
 
 
 settings = Settings()

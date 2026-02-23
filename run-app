@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "Starting services..."
+docker compose up --build -d
+
+echo "Applying database migrations..."
+docker compose run --rm backend alembic upgrade head
+
+echo ""
+echo "App is ready:"
+echo "  Frontend: http://localhost:3000"
+echo "  Backend:  http://localhost:8002"
+echo "  Docs:     http://localhost:8002/docs"
