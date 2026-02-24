@@ -5,6 +5,9 @@ on:
     branches: ["**"]
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -12,6 +15,7 @@ concurrency:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       PYTHONPATH: ${{ github.workspace }}/backend
       STRICT_PROVIDER_MODE: "false"
@@ -33,6 +37,7 @@ jobs:
     defaults:
       run:
         working-directory: backend
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -98,9 +103,11 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: frontend
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -126,10 +133,30 @@ jobs:
 
   smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     needs: [backend, frontend]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Prepare env files for docker compose
+        run: |
+          set -euo pipefail
+          cp backend/.env.example backend/.env
+          cp frontend/.env.local.example frontend/.env.local
+          if grep -q '^STRICT_PROVIDER_MODE=' backend/.env; then
+            sed -i 's/^STRICT_PROVIDER_MODE=.*/STRICT_PROVIDER_MODE=false/' backend/.env
+          else
+            echo 'STRICT_PROVIDER_MODE=false' >> backend/.env
+          fi
+          if grep -q '^APP_ENV=' backend/.env; then
+            sed -i 's/^APP_ENV=.*/APP_ENV=development/' backend/.env
+          else
+            echo 'APP_ENV=development' >> backend/.env
+          fi
+
+      - name: Validate compose configuration
+        run: docker compose config -q
 
       - name: Start services
         run: docker compose up --build -d postgres chroma backend frontend
@@ -167,4 +194,4 @@ jobs:
 
       - name: Teardown
         if: always()
-        run: docker compose down -v
+        run: docker compose down -v || true
