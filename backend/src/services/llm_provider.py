@@ -33,6 +33,34 @@ class LLMProvider:
         raise NotImplementedError
 
 
+class TemplateLLMProvider(LLMProvider):
+    """Deterministic local fallback provider used only when strict mode is disabled."""
+
+    def generate_email_draft(
+        self,
+        *,
+        prompt: str,
+        intent: str,
+        tone: str,
+        constraints: dict,
+        metadata: dict,
+    ) -> DraftGenerationResult:
+        _ = constraints
+        recipient_role = metadata.get("recipient_role", "recipient")
+        draft_text = (
+            f"Subject: {intent.replace('_', ' ').title()} update\n\n"
+            f"Hello {recipient_role},\n\n"
+            f"{prompt.strip()}\n\n"
+            f"Thanks,\n"
+            f"Your Name"
+        )
+        return DraftGenerationResult(
+            draft_text=draft_text,
+            model_used="template-fallback",
+            provider="local-template",
+        )
+
+
 class OpenAILLMProvider(LLMProvider):
     def __init__(self) -> None:
         if not settings.openai_api_key:
@@ -148,6 +176,8 @@ def get_llm_provider() -> LLMProvider:
     provider_factories: list[Callable[[], LLMProvider]] = []
     if settings.openai_api_key:
         provider_factories.append(lambda: OpenAILLMProvider())
+    if (not provider_factories) and (not settings.strict_provider_mode):
+        provider_factories.append(lambda: TemplateLLMProvider())
     if not provider_factories:
         raise RuntimeError("No real LLM provider configured. Set OPENAI_API_KEY.")
     return RoutingLLMProvider(provider_factories)

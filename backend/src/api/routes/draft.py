@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from functools import lru_cache
 
 from src.auth.security import Principal, enforce_user_scope, get_current_principal
 from src.core.config import settings
@@ -10,11 +11,15 @@ from src.services.rate_limiter import InMemoryRateLimiter
 from src.services.workflow import DraftWorkflowService
 
 router = APIRouter()
-workflow = DraftWorkflowService()
 rate_limiter = InMemoryRateLimiter(
     max_requests=settings.draft_rate_limit_requests,
     window_seconds=settings.draft_rate_limit_window_seconds,
 )
+
+
+@lru_cache(maxsize=1)
+def get_workflow() -> DraftWorkflowService:
+    return DraftWorkflowService()
 
 
 @router.post("/draft/generate", response_model=DraftGenerateResponse)
@@ -33,7 +38,7 @@ def generate_draft(
         raise replay_detected("Duplicate request_id detected")
 
     try:
-        response = workflow.run(payload)
+        response = get_workflow().run(payload)
     except HTTPException:
         raise
     except Exception:

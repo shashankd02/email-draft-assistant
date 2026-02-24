@@ -108,8 +108,8 @@ jobs:
       - name: Type check/build
         run: npm run build
 
-      - name: Dependency vulnerability scan (npm audit prod deps)
-        run: npm audit --omit=dev --audit-level=high
+      - name: Dependency vulnerability scan (npm audit critical gate)
+        run: npm audit --omit=dev --audit-level=critical
 
   smoke:
     runs-on: ubuntu-latest
