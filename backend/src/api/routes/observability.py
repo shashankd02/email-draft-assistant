@@ -39,6 +39,8 @@ def get_metrics(
     return {
         "status": "ok",
         "window": window,
+        # Backward-compatible key used by tests/clients.
+        "metrics": get_metrics_store().snapshot(),
         "live_metrics": get_metrics_store().snapshot(),
         "global_metrics": global_snapshot,
         "recent_activity": recent_activity,
