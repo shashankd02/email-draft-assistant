@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PYTHONPATH: ${{ github.workspace }}/backend
+      STRICT_PROVIDER_MODE: "false"
     services:
       postgres:
         image: postgres:16-alpine
