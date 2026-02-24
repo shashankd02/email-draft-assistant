@@ -184,7 +184,7 @@ jobs:
           curl -fsS -X POST http://localhost:8002/api/v1/draft/generate \
             -H "Authorization: Bearer ${TOKEN}" \
             -H 'Content-Type: application/json' \
-            -d '{"user_id":"ci-user","prompt":"Draft a CI smoke email.","intent":"informational","tone":"professional","constraints":{"max_paragraphs":2,"must_include":[],"forbidden":["PII"]},"metadata":{"recipient_role":"internal","language":"en"}}' >/dev/null
+            -d '{"user_id":"ci-user","prompt":"Draft an email to my engineering manager summarizing today'\''s CI smoke test results and requesting approval to proceed.","intent":"informational","tone":"professional","constraints":{"max_paragraphs":2,"must_include":[],"forbidden":["PII"]},"metadata":{"recipient_role":"internal","language":"en"}}' >/dev/null
           curl -fsS -X GET http://localhost:8002/api/v1/mcp/tools \
             -H "Authorization: Bearer ${TOKEN}" >/dev/null
 
