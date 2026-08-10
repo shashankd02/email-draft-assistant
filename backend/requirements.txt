@@ -9,7 +9,7 @@ orjson==3.11.0
 sqlalchemy==2.0.35
 alembic==1.13.2
 psycopg[binary]==3.2.1
-openai==1.51.2
+openai==2.53.0
 python-jose[cryptography]==3.4.0
 chromadb==0.5.5
 langsmith==0.1.129
